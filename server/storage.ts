@@ -11,6 +11,9 @@ export interface IStorage {
   createWaitlistEntry(entry: InsertWaitlist): Promise<Waitlist>;
   getWaitlistEntryByEmail(email: string): Promise<Waitlist | undefined>;
   getWaitlistCount(): Promise<number>;
+  getAllWaitlistEntries(): Promise<Waitlist[]>;
+  deleteWaitlistEntry(id: number): Promise<void>;
+  verifyAdminUser(username: string, password: string): Promise<User | undefined>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -46,8 +49,28 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getWaitlistCount(): Promise<number> {
-    const result = await db.select({ count: db.fn.count() }).from(waitlist);
+    const result = await db.select({ count: db.sql`count(*)` }).from(waitlist);
     return Number(result[0].count);
+  }
+  
+  async getAllWaitlistEntries(): Promise<Waitlist[]> {
+    const entries = await db.select().from(waitlist).orderBy(waitlist.createdAt);
+    return entries;
+  }
+  
+  async deleteWaitlistEntry(id: number): Promise<void> {
+    await db.delete(waitlist).where(eq(waitlist.id, id));
+  }
+  
+  async verifyAdminUser(username: string, password: string): Promise<User | undefined> {
+    const [user] = await db
+      .select()
+      .from(users)
+      .where(eq(users.username, username))
+      .where(eq(users.password, password))
+      .where(eq(users.isAdmin, true));
+    
+    return user || undefined;
   }
 }
 

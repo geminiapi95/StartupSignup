@@ -1,9 +1,37 @@
-import type { Express } from "express";
+import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { waitlistValidationSchema } from "@shared/schema";
+import { waitlistValidationSchema, adminLoginSchema } from "@shared/schema";
 import { ZodError } from "zod";
 import { fromZodError } from "zod-validation-error";
+import * as crypto from "crypto";
+
+// Simple session management for admin
+const SESSION_SECRET = process.env.SESSION_SECRET || "admin-secret-key";
+const adminSessions: Record<string, { userId: number; expiresAt: number }> = {};
+
+// Middleware to verify admin authentication
+const verifyAdminAuth = (req: Request, res: Response, next: NextFunction) => {
+  const authToken = req.headers.authorization?.split(" ")[1];
+  
+  if (!authToken || !adminSessions[authToken] || adminSessions[authToken].expiresAt < Date.now()) {
+    return res.status(401).json({ success: false, message: "Unauthorized access" });
+  }
+  
+  req.body.adminUserId = adminSessions[authToken].userId;
+  next();
+};
+
+// Helper to create admin session token
+const createAdminSession = (userId: number): string => {
+  const token = crypto.randomBytes(32).toString('hex');
+  // Session expires in 24 hours
+  adminSessions[token] = { 
+    userId, 
+    expiresAt: Date.now() + 24 * 60 * 60 * 1000 
+  };
+  return token;
+};
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Waitlist registration endpoint
