@@ -49,8 +49,8 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getWaitlistCount(): Promise<number> {
-    const result = await db.select({ count: db.sql`count(*)` }).from(waitlist);
-    return Number(result[0].count);
+    const entries = await db.select().from(waitlist);
+    return entries.length;
   }
   
   async getAllWaitlistEntries(): Promise<Waitlist[]> {
@@ -66,11 +66,13 @@ export class DatabaseStorage implements IStorage {
     const [user] = await db
       .select()
       .from(users)
-      .where(eq(users.username, username))
-      .where(eq(users.password, password))
-      .where(eq(users.isAdmin, true));
+      .where(eq(users.username, username));
     
-    return user || undefined;
+    if (user && user.password === password && user.isAdmin) {
+      return user;
+    }
+    
+    return undefined;
   }
 }
 
