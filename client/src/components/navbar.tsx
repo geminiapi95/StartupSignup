@@ -39,6 +39,9 @@ export function Navbar() {
             <button onClick={() => scrollToSection('faq')} className="text-muted-foreground hover:text-primary transition-colors">
               FAQ
             </button>
+            <Link href="/admin" className="text-muted-foreground hover:text-primary transition-colors">
+              Admin
+            </Link>
             <Button onClick={() => scrollToSection('waitlist')} className="bg-primary text-white px-4 py-2 rounded-md hover:bg-primary-600 transition-colors">
               Join Waitlist
             </Button>
@@ -72,6 +75,12 @@ export function Navbar() {
           >
             FAQ
           </button>
+          <Link 
+            href="/admin"
+            className="block w-full text-left px-3 py-2 rounded-md text-base font-medium text-muted-foreground hover:text-primary hover:bg-background-100"
+          >
+            Admin
+          </Link>
           <button 
             onClick={() => scrollToSection('waitlist')} 
             className="block w-full text-left px-3 py-2 rounded-md text-base font-medium bg-primary text-white hover:bg-primary-600"
